@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+
+# runtime state — never commit
+# the OAuth token file holds a live, rotating Netatmo refresh token,
+# alongside the poller's single-writer lock and its atomic-replace temp file
+token.json
+token.json.lock
+.token.json.tmp
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+data/
+
+# env files
+.env
+.env.*
+!.env.example
+
+# logs
+npm-debug.*
+*.log
+poll.log
+
+# macOS
+.DS_Store
+
+# typescript
+*.tsbuildinfo
+
+# Claude Code local overrides
+.claude/settings.local.json
+
+# Claude Code: this installation's private notes (house, devices, workflow)
+CLAUDE.local.md

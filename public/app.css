@@ -1,0 +1,675 @@
+/*
+ * Dark by default: the screen hangs in a living room and is read in passing.
+ * This is the daytime baseline; the evening and the night step down from it
+ * through `body[data-mode]`, set by `evening.js`.
+ *
+ * Type sizes are in container units (cqmin) of each tile, so they follow the
+ * tile's size — three tiles in a row and six in two rows need no breakpoints.
+ */
+:root {
+  --bg: #111418;
+  --tile: #1c2128;
+  --text: #f2f4f7;
+  --muted: #9aa4b2;
+  --warn: #f5b041;
+  /* A box that is meant to be seen but not heard: lighter than a tile, no hue. */
+  --chip: #333c48;
+  /*
+   * How bright a value that carries a judgement is: format.js decides the hue
+   * of the comfort colours, these two decide the rest, so a mode dims them
+   * with everything else. The ends of the same scales are the day's low and
+   * high on the curve.
+   *
+   * **A mode's pair is measured, not picked**: every coloured value has
+   * to keep the same luminance ratio to `--text` that it has here, or the
+   * colours dim less than the digits do and end up shouting in a dark room.
+   * They did: the green sat at 0.61 of the text's luminance by day but 0.74 in
+   * the evening and 0.79 at night, and it showed on the wall. The pairs below
+   * were solved against the six hues at once and land within 3 % of the day's
+   * ratios. HSL's lightness is not luminance — green at `62%` is more than
+   * twice as bright as red — so a hue's share of the text is what carries
+   * over, not a number of percent.
+   *
+   * The evening is at `46% / 36%` for its `#8b939f`, the night
+   * at `43% / 31%` for its `#79808b`.
+   */
+  --value-saturation: 65%;
+  --value-lightness: 62%;
+  /*
+   * The ends of the same scales, for the day's low and high. Only the hue is
+   * named here: a custom property that holds a whole hsl() is resolved where
+   * it is declared, so it would keep the daytime brightness in every mode.
+   */
+  --cold-hue: 212;
+  --warm-hue: 0;
+  --gap: 1.5vmin;
+  color-scheme: dark;
+}
+
+/*
+ * Evening: the daylight is gone and the lamps are on. The page still
+ * shows everything — someone watching television reads it in passing — it only
+ * stops shouting.
+ */
+body[data-mode="evening"] {
+  /*
+   * **Darker tiles, lighter ink**, judged on the wall. The
+   * night's #79808b on #12161c was 4.6:1, and in the room the lettering sank
+   * into the tile. The tile went darker and the page behind it to black, so
+   * the tiles keep their step from the page (1.09:1, was 1.11:1), and the text
+   * went up by a third in luminance — 6.2:1, still far below the #c2c9d3 that
+   * glared. **An empirical step, not a solved one:** it was judged by eye on
+   * the wall, and the next step starts from here.
+   *
+   * **The foreground moves as a set, or it stops being one.** Muted and
+   * warning keep their luminance ratio to `--text`, or a room's name would
+   * creep up on its value and flatten the hierarchy the wall is read by; the
+   * value pair is solved against `--text` like every other one (within 3 %).
+   */
+  --bg: #000;
+  --tile: #0b0e12;
+  --text: #8b939f;
+  --muted: #565f69;
+  --warn: #9f742c;
+  --chip: #262d36;
+  --value-saturation: 46%;
+  --value-lightness: 36%;
+}
+
+/*
+ * Night: the room is dark and the backlight cannot be turned down from
+ * here, so the only lever left is how many pixels are lit and how brightly.
+ * The tiles lose their own background and merge into the page — a lighter
+ * rectangle is a lit rectangle — and what is left is text just bright enough
+ * to read across the room, not to look at.
+ */
+body[data-mode="night"] {
+  --bg: #000;
+  --tile: #000;
+  --text: #79808b;
+  --muted: #4b525b;
+  --warn: #8a6526;
+  --chip: #1d232b;
+  --value-saturation: 43%;
+  --value-lightness: 31%;
+}
+
+/*
+ * A tile with no curve is two thirds empty, so at night its few lines sit in
+ * the middle of the tile instead of clinging to the top edge — three numbers
+ * spread over the wall rather than a row of them along it.
+ */
+body[data-mode="night"] .tile:not(.awake) {
+  justify-content: center;
+}
+
+/*
+ * A woken tile keeps the night's black.
+ * It used to take the evening's tile grey with the evening's lettering, and
+ * in the dark room that grey was the brightest thing on the page: tapping a
+ * tile at 02:00 lit a rectangle, and the tile no longer matched the ones
+ * around it that had stayed asleep. **The tap buys back the content, not the
+ * box** — which is the same rule the night is built on, that a lighter
+ * rectangle is a lit rectangle.
+ *
+ * It writes in the night's ink and keeps the evening's chip. Since the
+ * evening got lighter lettering of its own, that is spelled out
+ * here instead of borrowed: a tap at night brings back the content, not the
+ * evening's brightness.
+ */
+body[data-mode="night"] .tile.awake {
+  --bg: #000;
+  --tile: #000;
+  --chip: #262d36;
+}
+
+/*
+ * At night a filled box is a lit rectangle. Only the label that asks for
+ * something keeps one, while the guess that a window is open reports, and
+ * reads like the quiet "Nicht lüften" does by day. ("Vorhersage" is left out
+ * altogether at night: app.js drops a label that is only an offer to tap.)
+ */
+body[data-mode="night"] .tile:not(.awake) .airing.window {
+  padding-inline: 0;
+  background: none;
+  color: var(--muted);
+}
+
+/*
+ * The box that stays is a dark one, on sleeping and woken tiles alike. Filled
+ * with the night's amber under black lettering it was still the brightest
+ * area on the black page, and stood out on the wall; the dark brown of the
+ * server line's bar with the amber as lettering lights only the letters. It
+ * keeps a box at all because a box is what says "something to do" — without
+ * one, "Lüften" would differ from "Nicht lüften" by colour alone. 2.6:1, the
+ * lowest contrast on the page, chosen from a render and judged on the wall.
+ */
+body[data-mode="night"] .airing:not(.dont, .window, .forecast, .ask) {
+  background: #3a2a0c;
+  color: var(--warn);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+ * The page hides everything through the `hidden` attribute, and an author
+ * `display` silently beats it: `.secondary` is a flex row, so hiding it did
+ * nothing until this rule existed.
+ */
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, Roboto, "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  padding: var(--gap);
+  gap: var(--gap);
+}
+
+#tiles {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--columns, 3), 1fr);
+  grid-template-rows: repeat(var(--rows, 1), 1fr);
+  gap: var(--gap);
+}
+
+.tile {
+  container-type: size;
+  /*
+   * Each tile resolves its own text colour, and that is not redundant with the
+   * `color` on `body`: a woken tile at night redefines `--text` on itself,
+   * but `color` was already resolved on `body` against the body's
+   * value, and what the tile inherits is the finished colour, not the
+   * variable. Without this line the tile woke with the evening's background
+   * and the night's lettering — seen on a real wall.
+   */
+  color: var(--text);
+  background: var(--tile);
+  border-radius: 2vmin;
+  padding: 6cqmin 7cqmin;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  /* Values are tapped, not selected or zoomed into. */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* A value the newest point lacks: a dash, as quiet as a unit, still tappable. */
+.missing .value {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* The value whose curve the tile shows instead of the temperature. */
+.active .value {
+  text-decoration: underline;
+  text-decoration-thickness: 0.07em;
+  text-underline-offset: 0.12em;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 3cqmin;
+}
+
+.name {
+  flex: 1;
+  /* A long label may shorten the name, never hide it. */
+  min-width: 3em;
+  font-size: 10cqmin;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  margin-top: 4cqh;
+  /* Width is the limit: "−12,4 °C" is about 2.2em wide. */
+  font-size: min(33cqw, 28cqh);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.unit {
+  font-size: 0.45em;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 0.15em;
+}
+
+.secondary {
+  list-style: none;
+  margin-top: 2cqh;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 9cqmin;
+  font-size: 15cqmin;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.secondary .unit {
+  font-size: 0.6em;
+}
+
+/*
+ * The pressure tendency, in place of the unit: one arrow, rotated by
+ * format.js, in the unit's colour. Direction, not judgement. Larger than a
+ * unit, smaller than the number: "100 %" and "1014 →" have to share a line.
+ */
+.trend {
+  display: inline-block;
+  font-size: 0.8em;
+  margin-left: 0.15em;
+  color: var(--muted);
+}
+
+/*
+ * The airing recommendation beside a room's name. A filled box marks the two
+ * labels that ask for something, amber for the loud one — so red stays with
+ * the measured values. "Nicht lüften" is the answer "nothing to do" and keeps
+ * no box: if every label had one, none would catch the eye.
+ */
+.airing {
+  flex: none;
+  /* Smaller than the name: "Wohnzimmer" and "Fenster auf?" have to share a line. */
+  font-size: 7cqmin;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 0.15em 0.45em;
+  border-radius: 0.3em;
+  background: var(--warn);
+  color: var(--bg);
+}
+
+/* A guess that a window is open: it reports, so it does not take the loud colour. */
+.airing.window {
+  background: var(--chip);
+  color: var(--text);
+}
+
+/*
+ * The forecast behind a tap on the outdoor tile, and the question
+ * "Lüften?" while no rule applies: offers, not calls to act.
+ */
+.airing.forecast,
+.airing.ask {
+  background: var(--chip);
+  color: var(--text);
+}
+
+/* Nothing to do: the quietest line in the header, and no box to carry. */
+.airing.dont {
+  padding-inline: 0;
+  background: none;
+  color: var(--muted);
+}
+
+/*
+ * The reason behind the label, in the curve's place; it never runs over the
+ * age. It scrolls rather than clips: with the server or power line at the foot
+ * of the page the tiles lose height, and a cut sentence was seen on the wall.
+ * Android's scrollbar shows only while scrolling, so a text with more out of
+ * sight fades out at that edge instead — `above` and `below` are set by
+ * app.js. A line at the top, two at the foot: on the wall the text runs over
+ * by about a line, and a deeper fade at the top swallowed the table's head.
+ */
+.reason {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  margin: 4cqh 0 1cqh;
+  font-size: 8cqmin;
+  line-height: 1.35;
+}
+
+.reason {
+  --fade-above: 0px;
+  --fade-below: 0px;
+}
+
+.reason.above {
+  --fade-above: 1lh;
+}
+
+.reason.below {
+  --fade-below: 2lh;
+}
+
+.reason:is(.above, .below) {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 var(--fade-above),
+    #000 calc(100% - var(--fade-below)),
+    transparent
+  );
+}
+
+.reason .rows {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2em 1em;
+  font-variant-numeric: tabular-nums;
+}
+
+.reason dt {
+  color: var(--muted);
+}
+
+/*
+ * Inside against outside: per side a number, right-aligned, and its
+ * unit right behind it; the head spans both.
+ */
+.reason .rows.compare {
+  grid-template-columns: auto auto auto auto;
+  justify-content: start;
+  column-gap: 0.25em;
+}
+
+.reason .compare .head {
+  grid-column: span 2;
+  color: var(--muted);
+}
+
+.reason .compare .number {
+  text-align: right;
+  font-weight: 600;
+}
+
+.reason .compare .measure {
+  color: var(--muted);
+}
+
+/* The gap between the two sides: after the inside's unit, the 4th, 8th … child. */
+.reason .compare .measure:nth-child(4n) {
+  padding-right: 1.4em;
+}
+
+/*
+ * Wrapped as a whole paragraph: no wide gap before a long word, and no
+ * lone word on the last line. Hyphenation was compared on the wall and left
+ * out: the tablet's WebView does hyphenate German, but it closes the gaps
+ * while keeping the lone word, and splits two more.
+ */
+.reason .text {
+  margin-top: 0.8em;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+/*
+ * The day's temperature: a square plot with its hour labels below, shrinking
+ * only when the tile has no room for one. Whatever height is left over goes
+ * below the age's line, not into a taller curve.
+ */
+.chart {
+  position: relative;
+  flex: 0 1 calc(100cqw + 7cqmin);
+  min-height: 0;
+  margin: 6cqh 0 1cqh;
+}
+
+.chart svg {
+  display: block;
+  /* A dot at the window's edge would otherwise be cut in half. */
+  overflow: visible;
+  width: 100%;
+  height: calc(100% - 7cqmin);
+}
+
+.chart .line {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The day's low and high on the curve, in the colours of the line below. */
+.chart .dot {
+  fill: none;
+  stroke-width: 12;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart .dot.min {
+  stroke: hsl(var(--cold-hue) var(--value-saturation) var(--value-lightness));
+}
+
+.chart .dot.max {
+  stroke: hsl(var(--warm-hue) var(--value-saturation) var(--value-lightness));
+}
+
+/* Blue and red mean cold and warm; other curves keep their low and high neutral. */
+.chart.neutral .dot {
+  stroke: var(--text);
+}
+
+.chart .grid {
+  stroke: var(--muted);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+
+/* A key value: solid, so a value reads apart from the dashed times. */
+.chart .guide-lines {
+  stroke-dasharray: none;
+}
+
+.chart .labels {
+  position: absolute;
+  inset: auto 0 0;
+  height: 7cqmin;
+}
+
+.chart .label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 6cqmin;
+  line-height: 7cqmin;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* A guide's value at its left end, just above the line, over the curve's area. */
+.chart .guides {
+  position: absolute;
+  inset: 0 0 7cqmin;
+  pointer-events: none;
+}
+
+.chart .guide {
+  position: absolute;
+  left: 0;
+  transform: translateY(-100%);
+  font-size: 5cqmin;
+  line-height: 1;
+  padding-bottom: 0.5cqmin;
+  color: var(--muted);
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.range {
+  font-size: 8cqmin;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.range .min,
+.range .max {
+  font-weight: 600;
+}
+
+.range .min {
+  color: hsl(var(--cold-hue) var(--value-saturation) var(--value-lightness));
+}
+
+.range .max {
+  color: hsl(var(--warm-hue) var(--value-saturation) var(--value-lightness));
+}
+
+/*
+ * The other rooms' air in this room's terms. The line is reserved in
+ * every tile, empty or not: the curves were taller than they need to be, and
+ * a curve that shrank whenever the line filled would jump on every tap.
+ */
+.range.others {
+  min-height: 1lh;
+}
+
+.range.others .value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.range.neutral .min,
+.range.neutral .max {
+  color: var(--text);
+}
+
+.age {
+  margin-top: 1cqmin;
+  font-size: 8cqmin;
+  color: var(--muted);
+}
+
+/*
+ * The age and its hint are two unbreakable pieces on one line, or two lines
+ * when both do not fit. The separator dot sits in the gap before the hint;
+ * the line reaches one gap past the left edge, which clips, so a hint that
+ * wrapped to the start of its own line loses its dot instead of leading
+ * with it.
+ */
+.age {
+  overflow: hidden;
+}
+
+.age .line {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 0 0 -1em;
+}
+
+.age .line > span {
+  position: relative;
+  margin-left: 1em;
+  white-space: nowrap;
+}
+
+/* Quiet on an ordinary day: the hint exists only when something is wrong. */
+.age .hint {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.age .hint::before {
+  content: "·";
+  position: absolute;
+  left: -0.65em;
+  color: var(--muted);
+  font-weight: normal;
+}
+
+/* A stale tile keeps its values but stops looking current. */
+.tile.stale .main,
+.tile.stale .secondary,
+.tile.stale .chart {
+  opacity: 0.35;
+}
+
+.tile.stale .age {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.tile.stale .age .text::before {
+  content: "⚠ ";
+}
+
+/*
+ * While the forecast shows, this line is its source and query time, not the
+ * tile's age — the warning belongs to the Netatmo point and would point
+ * at Open-Meteo here.
+ */
+.tile.stale .age.source {
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.tile.stale .age.source .text::before {
+  content: none;
+}
+
+#status {
+  flex: none;
+  padding: 1vmin 2vmin;
+  border-radius: 1vmin;
+  background: #3a2a0c;
+  color: var(--warn);
+  font-size: 3vmin;
+  font-weight: 600;
+}
+
+/* A lost server and a pulled plug are two things to do: one line each. */
+#status .line {
+  display: block;
+}
+
+/*
+ * At night the bar is text only. A full-width brown strip on the black page
+ * is a lit rectangle, which the night allows a chip but nothing larger; on
+ * black the same amber also reads better (4.0:1 against 2.6:1 on the strip).
+ * Without its box the bar would start at the page's edge, so it moves in to
+ * where the tiles' text starts — app.js reads that from the first tile.
+ */
+body[data-mode="night"] #status {
+  background: none;
+  padding-inline: var(--tile-inset, 2vmin);
+}
+
+#diag {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.5em 1em;
+  background: #000c;
+  color: #7fdbff;
+  font: 16px/1.4 ui-monospace, monospace;
+  /* Two lines: the device's own facts, then what the page made of them. */
+  white-space: pre-line;
+}

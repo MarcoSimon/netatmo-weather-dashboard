@@ -1,0 +1,21 @@
+{
+  "name": "netatmo-weather-dashboard",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Wall-mounted dashboard for a private Netatmo weather station",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "poll": "node --disable-warning=ExperimentalWarning --env-file-if-exists=.env src/poll.js",
+    "poll:once": "node --disable-warning=ExperimentalWarning --env-file-if-exists=.env src/poll.js --once",
+    "serve": "node --disable-warning=ExperimentalWarning --env-file-if-exists=.env src/serve.js",
+    "windows": "node --disable-warning=ExperimentalWarning --env-file-if-exists=.env src/windows.js",
+    "demo": "node --disable-warning=ExperimentalWarning src/demo.js",
+    "charge:deploy": "node --env-file-if-exists=.env src/chargeDeploy.js",
+    "charge:log": "node --env-file-if-exists=.env src/chargeLog.js",
+    "test": "node --disable-warning=ExperimentalWarning --test"
+  }
+}
